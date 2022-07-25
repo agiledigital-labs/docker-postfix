@@ -1,15 +1,15 @@
-FROM ubuntu:focal
+FROM ubuntu:jammy-20220531
 LABEL org.opencontainers.image.authors="Elliott Ye, Agile Digital <hello@agiledigital.com.au>"
 
 # Set noninteractive mode for apt-get
 ENV DEBIAN_FRONTEND noninteractive
 
 # Update
-RUN apt-get update
+RUN apt update
 
 # Start editing
 # Install package here for cache
-RUN apt-get -y install supervisor postfix sasl2-bin opendkim opendkim-tools rsyslog
+RUN apt -y install supervisor postfix sasl2-bin opendkim opendkim-tools rsyslog
 
 # Add files
 ADD assets/install.sh /opt/install.sh
