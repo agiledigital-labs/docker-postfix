@@ -1,4 +1,4 @@
-FROM ubuntu:jammy-20220801
+FROM ubuntu:jammy-20221130
 LABEL org.opencontainers.image.authors="Elliott Ye, Agile Digital <hello@agiledigital.com.au>"
 
 # Set noninteractive mode for apt-get
