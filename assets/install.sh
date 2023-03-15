@@ -29,6 +29,26 @@ chmod +x /opt/postfix.sh
 postconf -e myhostname=$maildomain
 postconf -F '*/*/chroot = n'
 
+# Copy the transport map config file, which can configure Postfix to relay emails depending on the
+# recipient email address.
+# For example, we can use a transport map to relay all emails to a MailDev server, except ones sent
+# to @agiledigital.com.au addresses, and use a recipient BCC map (below) to BCC emails sent to
+# foo@agiledigital.com.au to foo@agiledigital.com.au.maildev. That way only emails to
+# @agiledigital.com.au addresses are actually sent, but we can still view all emails in MailDev.
+if [[ -f /opt/transport ]]; then
+  cp /opt/transport /etc/postfix/transport
+  postmap /etc/postfix/transport
+  postconf -e transport_maps=hash:/etc/postfix/transport
+fi
+
+# Copy the recipient BCC map config file, which can configure Postfix to BCC emails depending on the
+# recipient email address. Note that the file must have regex entries.
+if [[ -f /opt/recipient_bcc_maps ]]; then
+  cp /opt/recipient_bcc_maps /etc/postfix/recipient_bcc_maps
+  postmap /etc/postfix/recipient_bcc_maps
+  postconf -e recipient_bcc_maps=regexp:/etc/postfix/recipient_bcc_maps
+fi
+
 ############
 # SASL SUPPORT FOR CLIENTS
 # The following options set parameters needed by Postfix to enable
@@ -71,6 +91,14 @@ fi
 #############
 #  opendkim
 #############
+
+# Copy additional DKIM keys. This lets you add keys without having to mount them in
+# /etc/opendkim/domainkeys with the correct ownership and permissions.
+if [[ -d /opt/opendkim-domainkeys ]]; then
+  mkdir -p /etc/opendkim/domainkeys
+  chmod 700 /etc/opendkim/domainkeys
+  cp -aL /opt/opendkim-domainkeys/. /etc/opendkim/domainkeys/
+fi
 
 if [[ -z "$(find /etc/opendkim/domainkeys -iname *.private)" ]]; then
   exit 0
@@ -127,5 +155,6 @@ cat >> /etc/opendkim/SigningTable <<EOF
 *@$maildomain mail._domainkey.$maildomain
 EOF
 chown opendkim:opendkim /etc/opendkim/domainkeys
+chmod 700 /etc/opendkim/domainkeys
 chown opendkim:opendkim $(find /etc/opendkim/domainkeys -iname *.private)
 chmod 400 $(find /etc/opendkim/domainkeys -iname *.private)
